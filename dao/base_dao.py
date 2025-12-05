@@ -43,15 +43,15 @@ class BaseDAO(ABC, Generic[T]):
             return None #retorna nada
     
   ### Read
-  def read_id(self, record_id: int) -> Optional[T]:
+  def read_id(self, pk: str, value: T) -> Optional[T]:
     try:
-      response = self._client.table(self._table_name).select('*').execute()
-      if response.data:
-        return [self.to_model(item) for item in response.data] #Retornando do formato JSON (dict) para modelo de dados (T)
-      return [] #retorna uma lista vazia caso não retorne um objeto Python
+      response = self._client.table(self._table_name).select('*').eq(pk,value).execute()
+      if response.data and len(response.data) > 0:
+        return self.to_model(response.data[0])
+      return None 
     except Exception as e:
       print(f'Erro ao buscar todos os registros: {e}')
-      return [] #retorna uma lista vazia
+      return None
   
   # Retorna todos os valores de uma tabela
   def read_all(self) -> List[T]:
@@ -67,11 +67,11 @@ class BaseDAO(ABC, Generic[T]):
       return [] #Retorna vazio
     
   ### Update
-  def update(self, record_id: int, model: T) -> Optional[T]:
+  def update(self, key: T, model: T) -> Optional[T]:
         #Tratamento de erros
         try:
             data = self.to_dict(model) # Do modelo de dados (T) para formato JSON (dict)
-            response = self._client.table(self._table_name).update(data).eq('id', record_id).execute() #
+            response = self._client.table(self._table_name).update(data).eq(key).execute() #
             if response.data: #conexão com SUPABASE
                 return self.to_model(response.data[0]) #Retornando do formato JSON (dict) para modelo de dados (T)
             return None #retorna nada
@@ -81,12 +81,12 @@ class BaseDAO(ABC, Generic[T]):
             return None #retorna nada
   
   ### Delete
-  def delete(self, record_id: int) -> bool: #deve retornar valores lógicos (True ou False)
-        #tratamento de erros
-        try: 
-            response = self._client.table(self._table_name).delete().eq('id', record_id).execute() #tá pedindo o que retorne o nome da tabela e delete o que tiver com aquele ID. 
-            return bool(response.data) #retorna verdadeiro se o registro for deletado
-        #caso de erro
-        except Exception as e:
-            print(f"Erro ao deletar registro: {e}") #mensagem de erro
-            return False #retorna falso
+  def delete(self, key: T) -> bool: #deve retornar valores lógicos (True ou False)
+    #tratamento de erros
+    try: 
+      response = self._client.table(self._table_name).delete().eq(key).execute() #tá pedindo o que retorne o nome da tabela e delete o que tiver com aquele ID. 
+      return bool(response.data) #retorna verdadeiro se o registro for deletado
+    #caso de erro
+    except Exception as e:
+      print(f"Erro ao deletar registro: {e}") #mensagem de erro
+      return False #retorna falso

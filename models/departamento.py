@@ -47,15 +47,6 @@ class Departamento:
         self._updated_at = datetime.now()
 
     @property
-    def sexo(self) -> str:
-        return self._sexo
-
-    @sexo.setter
-    def sexo(self, sexo: str):
-        self._sexo = sexo
-        self._updated_at = datetime.now()
-
-    @property
     def cpf_supervisor(self) -> Optional[str]:
         return self._cpf_supervisor
 
